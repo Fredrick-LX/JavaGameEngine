@@ -13,7 +13,6 @@ import com.hmengine.renderer.Renderer2D;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -35,10 +34,9 @@ public class Main {
 
     private long window;
     private Renderer2D renderer;
-    private Random random;
     private static final int WINDOW_WIDTH = 1600;
     private static final int WINDOW_HEIGHT = 900;
-    private static final int GRID_SIZE = 10;
+    private static final int GRID_SIZE = 50;
     private static final int MAP_WIDTH = WINDOW_WIDTH / GRID_SIZE;
     private static final int MAP_HEIGHT = WINDOW_HEIGHT / GRID_SIZE;
     private static final float TILE_SIZE = 2.0f / MAP_WIDTH;
@@ -143,7 +141,6 @@ public class Main {
 
         // 初始化渲染器和随机数生成器
         renderer = new Renderer2D(WINDOW_WIDTH, WINDOW_HEIGHT);
-        random = new Random();
         tiles = new ArrayList<>();
         terrainGenerator = new TerrainGenerator(114514);
 
