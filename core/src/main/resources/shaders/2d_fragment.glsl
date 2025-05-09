@@ -12,6 +12,9 @@ void main() {
     int textureIndex = int(v_TextureIndex);
     if (textureIndex >= 0) {
         vec4 texColor = texture(u_Textures[textureIndex], v_TexCoord);
+        if (texColor.a < 0.1) {
+            discard;
+        }
         FragColor = texColor * v_Color;
     } else {
         FragColor = v_Color;

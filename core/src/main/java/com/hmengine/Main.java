@@ -9,6 +9,7 @@ import org.lwjgl.system.MemoryStack;
 
 import com.hmengine.map.TerrainGenerator;
 import com.hmengine.renderer.Renderer2D;
+import com.hmengine.renderer.TextureManager;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -23,12 +24,12 @@ public class Main {
     private static class Tile {
         Vector2f position;
         float size;
-        boolean isWall;
+        String textureType;
 
-        Tile(Vector2f position, float size, boolean isWall) {
+        Tile(Vector2f position, float size, String textureType) {
             this.position = position;
             this.size = size;
-            this.isWall = isWall;
+            this.textureType = textureType;
         }
     }
 
@@ -36,7 +37,7 @@ public class Main {
     private Renderer2D renderer;
     private static final int WINDOW_WIDTH = 1600;
     private static final int WINDOW_HEIGHT = 900;
-    private static final int GRID_SIZE = 50;
+    private static final int GRID_SIZE = 20;
     private static final int MAP_WIDTH = WINDOW_WIDTH / GRID_SIZE;
     private static final int MAP_HEIGHT = WINDOW_HEIGHT / GRID_SIZE;
     private static final float TILE_SIZE = 2.0f / MAP_WIDTH;
@@ -67,7 +68,7 @@ public class Main {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         // 创建窗口
-        window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "无限地图生成", NULL, NULL);
+        window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "文字地图生成器", NULL, NULL);
         if (window == NULL) {
             throw new RuntimeException("无法创建GLFW窗口");
         }
@@ -95,15 +96,12 @@ public class Main {
                 float deltaX = (float) (xpos - lastMousePosition.x) / GRID_SIZE;
                 float deltaY = (float) (ypos - lastMousePosition.y) / GRID_SIZE;
                 
-                // 更新世界偏移
                 worldOffset.x -= deltaX * DRAG_SPEED;
                 worldOffset.y += deltaY * DRAG_SPEED;
                 
-                // 更新视图偏移
                 viewOffsetX -= deltaX * DRAG_SPEED * TILE_SIZE;
                 viewOffsetY += deltaY * DRAG_SPEED * TILE_SIZE;
                 
-                // 当视图偏移超过一个瓦片大小时，重新生成地图
                 if (Math.abs(viewOffsetX) >= TILE_SIZE || Math.abs(viewOffsetY) >= TILE_SIZE) {
                     worldOffset.x = Math.round(worldOffset.x);
                     worldOffset.y = Math.round(worldOffset.y);
@@ -121,7 +119,6 @@ public class Main {
             if (button == GLFW_MOUSE_BUTTON_LEFT) {
                 isDragging = action == GLFW_PRESS;
                 if (!isDragging) {
-                    // 拖动结束时，确保地图对齐到网格
                     worldOffset.x = Math.round(worldOffset.x);
                     worldOffset.y = Math.round(worldOffset.y);
                     viewOffsetX = 0;
@@ -139,8 +136,9 @@ public class Main {
         // 初始化OpenGL
         GL.createCapabilities();
 
-        // 初始化渲染器和随机数生成器
+        // 初始化渲染器和纹理系统
         renderer = new Renderer2D(WINDOW_WIDTH, WINDOW_HEIGHT);
+        TextureManager.init();
         tiles = new ArrayList<>();
         terrainGenerator = new TerrainGenerator(114514);
 
@@ -151,28 +149,33 @@ public class Main {
     private void updateTiles() {
         tiles.clear();
         
-        // 计算视口范围
         int startX = (int)Math.floor(worldOffset.x);
         int startY = (int)Math.floor(worldOffset.y);
         
         for (int x = 0; x < MAP_WIDTH; x++) {
             for (int y = 0; y < MAP_HEIGHT; y++) {
-                // 计算世界坐标
                 float worldX = x + startX;
                 float worldY = y + startY;
 
-                // 生成地形
-                boolean isWall = terrainGenerator.isWall(worldX, worldY);
+                // 根据地形类型选择对应的纹理
+                String textureType;
+                if (terrainGenerator.isWater(worldX, worldY)) {
+                    textureType = "water";
+                } else if (terrainGenerator.isMountain(worldX, worldY)) {
+                    textureType = "mountain";
+                } else if (terrainGenerator.isForest(worldX, worldY)) {
+                    textureType = "forest";
+                } else {
+                    textureType = "floor";
+                }
 
-                // 计算渲染位置（考虑偏移）
                 float screenX = (float)x / MAP_WIDTH * 2.0f - 1.0f + TILE_SIZE/2 + viewOffsetX;
                 float screenY = (float)y / MAP_HEIGHT * 2.0f - 1.0f + TILE_SIZE/2 + viewOffsetY;
 
-                // 添加瓦片
                 tiles.add(new Tile(
                     new Vector2f(screenX, screenY),
                     TILE_SIZE,
-                    isWall
+                    textureType
                 ));
             }
         }
@@ -183,7 +186,7 @@ public class Main {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         while (!glfwWindowShouldClose(window)) {
-            GL11.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 
             renderer.begin();
@@ -191,8 +194,8 @@ public class Main {
                 renderer.submit(
                     tile.position,
                     new Vector2f(tile.size),
-                    tile.isWall ? new Vector4f(0.2f, 0.2f, 0.2f, 1.0f) : new Vector4f(0.8f, 0.8f, 0.8f, 1.0f),
-                    -1
+                    new Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                    TextureManager.getTexture(tile.textureType)
                 );
             }
             renderer.end();
@@ -212,6 +215,7 @@ public class Main {
 
     private void cleanup() {
         renderer.cleanup();
+        TextureManager.cleanup();
         glfwFreeCallbacks(window);
         glfwDestroyWindow(window);
         glfwTerminate();
