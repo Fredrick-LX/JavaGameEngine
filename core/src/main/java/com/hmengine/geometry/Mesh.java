@@ -2,6 +2,7 @@ package com.hmengine.geometry;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public class Mesh {
     private float[] vertices;
@@ -11,6 +12,7 @@ public class Mesh {
     private Vector3f rotation;
     private Vector3f scale;
     private Matrix4f modelMatrix;
+    private Vector4f color;  // 新增颜色属性
 
     public Mesh(float[] vertices, int primitiveType) {
         this.vertices = vertices;
@@ -20,6 +22,7 @@ public class Mesh {
         this.rotation = new Vector3f(0.0f, 0.0f, 0.0f);
         this.scale = new Vector3f(1.0f, 1.0f, 1.0f);
         this.modelMatrix = new Matrix4f();
+        this.color = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);  // 默认白色
         updateModelMatrix();
     }
 
@@ -63,5 +66,13 @@ public class Mesh {
 
     public Vector3f getPosition() {
         return position;
+    }
+
+    public void setColor(float r, float g, float b, float a) {
+        color.set(r, g, b, a);
+    }
+
+    public Vector4f getColor() {
+        return color;
     }
 } 

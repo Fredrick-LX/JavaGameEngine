@@ -70,6 +70,14 @@ public class Renderer {
             // 设置模型矩阵
             shader.setModelMatrix(mesh.getModelMatrix());
             
+            // 设置网格颜色
+            shader.setColor(
+                mesh.getColor().x,
+                mesh.getColor().y,
+                mesh.getColor().z,
+                mesh.getColor().w
+            );
+            
             // 绘制物体
             glBindVertexArray(VAO);
             glDrawArrays(mesh.getPrimitiveType(), 0, mesh.getVertexCount());

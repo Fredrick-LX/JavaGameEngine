@@ -19,7 +19,7 @@ public class Main {
     private float rotation = 0.0f;
 
     // 背景颜色设置
-    private float[] backgroundColor = {0.2f, 0.3f, 0.3f, 1.0f};
+    private float[] backgroundColor = { 0.2f, 0.3f, 0.3f, 1.0f };
 
     // FPS相关变量
     private long lastFrameTime;
@@ -27,7 +27,7 @@ public class Main {
     private float fps;
     private static final float FPS_UPDATE_INTERVAL = 0.5f;
     private float timeSinceLastFPSUpdate = 0.0f;
-    
+
     // 帧率限制相关变量
     private static final int TARGET_FPS = 120;
     private static final long TARGET_FRAME_TIME = 1_000_000_000 / TARGET_FPS; // 纳秒
@@ -63,15 +63,26 @@ public class Main {
         // 创建场景
         scene = new Scene();
 
-        //极限测试104万个三角形
-        //int n = 1048576;
-        int n = 30;
+        // 极限测试104万个三角形
+        // int n = 1048576;
+        int n = 60;
         for (int i = 0; i < n; i++) {
             Mesh mesh = Geometry.createHexagon();
             float x = (float) Math.cos(i * 2 * Math.PI / (float) n) * 0.3f;
             float y = (float) Math.sin(i * 2 * Math.PI / (float) n) * 0.3f;
             mesh.setPosition(x, y, 0.0f);
             mesh.setScale(0.1f, 0.1f, 1.0f);
+
+            // 为每个六边形设置固定的颜色
+            /*
+             * float hue = (float) i;
+             * mesh.setColor(
+             * (float) Math.sin(hue * Math.PI / 2f * (float) (n + 0.52f)) * 0.5f + 0.5f,
+             * (float) Math.sin(hue * Math.PI / 2f * (float) (n + 1.04f)) * 0.5f + 0.5f,
+             * (float) Math.sin(hue * Math.PI / 2f * (float) (n + 1.57f)) * 0.5f + 0.5f,
+             * 1.0f);
+             */
+
             scene.addMesh(mesh);
         }
 
@@ -108,19 +119,19 @@ public class Main {
             glClear(GL_COLOR_BUFFER_BIT);
 
             // 更新旋转
-            rotation += 0.001f;
+            rotation += 0.0005f;
             for (int i = 0; i < scene.getMeshes().size(); i++) {
                 Mesh mesh = scene.getMeshes().get(i);
-                mesh.setRotation(0.0f, 0.0f, -rotation + i * 0.2f);
-                mesh.setPosition((float) Math.sin(rotation*10+i) * 0.5f, (float) Math.cos(rotation*10+i) * 0.5f, 0f);
-                
-                shader.use();
-                shader.setColor(
-                    (float)Math.sin(rotation*10+1.57f) * 0.5f+0.5f,
-                    (float)Math.sin(rotation*10+0.52f) * 0.5f+0.5f,
-                    (float)Math.sin(rotation*10+1.04f) * 0.5f+0.5f,
-                    1.0f
-                );
+                mesh.setRotation(0.0f, 0.0f, 0.0f);
+                mesh.setPosition((float) Math.sin(rotation * 10 + i) * 0.5f, (float) Math.cos(rotation * 10 + i) * 0.5f,
+                        0.0f);
+
+                float hue = (float) (i + rotation) % scene.getMeshes().size();
+                mesh.setColor(
+                        (float) Math.sin(hue * Math.PI / 2f * (float) (scene.getMeshes().size() + 0.52f)) * 0.5f + 0.5f,
+                        (float) Math.sin(hue * Math.PI / 2f * (float) (scene.getMeshes().size() + 1.04f)) * 0.5f + 0.5f,
+                        (float) Math.sin(hue * Math.PI / 2f * (float) (scene.getMeshes().size() + 1.57f)) * 0.5f + 0.5f,
+                        1.0f);
             }
 
             // 相机控制
@@ -159,12 +170,14 @@ public class Main {
         if (window.isKeyPressed(GLFW_KEY_D)) {
             camera.move(cameraMoveSpeed, 0, 0);
         }
-        /*if (window.isKeyPressed(GLFW_KEY_LEFT)) {
-            camera.rotate(0, 0, cameraRotateSpeed);
-        }
-        if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
-            camera.rotate(0, 0, -cameraRotateSpeed);
-        }*/
+        /*
+         * if (window.isKeyPressed(GLFW_KEY_LEFT)) {
+         * camera.rotate(0, 0, cameraRotateSpeed);
+         * }
+         * if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
+         * camera.rotate(0, 0, -cameraRotateSpeed);
+         * }
+         */
     }
 
     // 设置背景颜色
