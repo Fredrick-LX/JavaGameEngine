@@ -1,54 +1,25 @@
 package com.hmengine;
 
-import org.joml.Vector2f;
-import org.joml.Vector4f;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.system.MemoryStack;
-
-import com.hmengine.map.TerrainGenerator;
-import com.hmengine.renderer.Renderer2D;
-import com.hmengine.renderer.TextureManager;
-
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.system.MemoryUtil.NULL;
+import com.hmengine.geometry.Geometry;
+import com.hmengine.geometry.Mesh;
+import static org.lwjgl.opengl.GL11.*;
 
 public class Main {
-    private static class Tile {
-        Vector2f position;
-        float size;
-        String textureType;
+    private final int WIDTH = 800;
+    private final int HEIGHT = 600;
+    private Window window;
+    private Shader shader;
+    private Renderer renderer;
+    private Scene scene;
+    private Camera camera;
+    private float rotation = 0.0f;
 
-        Tile(Vector2f position, float size, String textureType) {
-            this.position = position;
-            this.size = size;
-            this.textureType = textureType;
-        }
-    }
-
-    private long window;
-    private Renderer2D renderer;
-    private static final int WINDOW_WIDTH = 1600;
-    private static final int WINDOW_HEIGHT = 900;
-    private static final int GRID_SIZE = 20;
-    private static final int MAP_WIDTH = WINDOW_WIDTH / GRID_SIZE;
-    private static final int MAP_HEIGHT = WINDOW_HEIGHT / GRID_SIZE;
-    private static final float TILE_SIZE = 2.0f / MAP_WIDTH;
-    private List<Tile> tiles;
-    private boolean isDragging = false;
-    private Vector2f lastMousePosition;
-    private Vector2f worldOffset;
-    private static final float DRAG_SPEED = 1.0f;
-    private TerrainGenerator terrainGenerator;
-    private float viewOffsetX = 0.0f;
-    private float viewOffsetY = 0.0f;
+    // FPS相关变量
+    private long lastFrameTime;
+    private int frameCount;
+    private float fps;
+    private static final float FPS_UPDATE_INTERVAL = 0.5f; // 每秒更新一次FPS
+    private float timeSinceLastFPSUpdate = 0.0f;
 
     public void run() {
         init();
@@ -57,171 +28,84 @@ public class Main {
     }
 
     private void init() {
-        // 初始化GLFW
-        if (!glfwInit()) {
-            throw new IllegalStateException("无法初始化GLFW");
+        // 创建并初始化窗口
+        window = new Window(WIDTH, HEIGHT, "渲染测试", true);
+        window.init();
+
+        // 创建着色器程序
+        shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
+
+        float aspectRatio = (float) WIDTH / (float) HEIGHT;
+        // 创建相机
+        camera = new Camera(aspectRatio);
+        camera.setZoom(2f);
+
+        // 创建渲染器
+        renderer = new Renderer(shader, camera);
+
+        // 创建场景
+        scene = new Scene();
+
+        int n = 32768;
+        for (int i = 0; i < n; i++) {
+            Mesh mesh = Geometry.createTriangle();
+            float x = (float) Math.cos(i * 2 * Math.PI / (float) n) * 0.3f;
+            float y = (float) Math.sin(i * 2 * Math.PI / (float) n) * 0.3f;
+            mesh.setPosition(x, y, 0.0f);
+            mesh.setScale(0.1f, 0.1f, 1.0f);
+            scene.addMesh(mesh);
         }
 
-        // 配置GLFW
-        glfwDefaultWindowHints();
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        // 设置场景
+        renderer.setScene(scene);
 
-        // 创建窗口
-        window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "文字地图生成器", NULL, NULL);
-        if (window == NULL) {
-            throw new RuntimeException("无法创建GLFW窗口");
-        }
-
-        // 设置窗口位置
-        try (MemoryStack stack = stackPush()) {
-            IntBuffer pWidth = stack.mallocInt(1);
-            IntBuffer pHeight = stack.mallocInt(1);
-            glfwGetWindowSize(window, pWidth, pHeight);
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            glfwSetWindowPos(
-                window,
-                (vidmode.width() - pWidth.get(0)) / 2,
-                (vidmode.height() - pHeight.get(0)) / 2
-            );
-        }
-
-        // 初始化变量
-        lastMousePosition = new Vector2f();
-        worldOffset = new Vector2f();
-
-        // 设置鼠标回调
-        glfwSetCursorPosCallback(window, (_, xpos, ypos) -> {
-            if (isDragging) {
-                float deltaX = (float) (xpos - lastMousePosition.x) / GRID_SIZE;
-                float deltaY = (float) (ypos - lastMousePosition.y) / GRID_SIZE;
-                
-                worldOffset.x -= deltaX * DRAG_SPEED;
-                worldOffset.y += deltaY * DRAG_SPEED;
-                
-                viewOffsetX -= deltaX * DRAG_SPEED * TILE_SIZE;
-                viewOffsetY += deltaY * DRAG_SPEED * TILE_SIZE;
-                
-                if (Math.abs(viewOffsetX) >= TILE_SIZE || Math.abs(viewOffsetY) >= TILE_SIZE) {
-                    worldOffset.x = Math.round(worldOffset.x);
-                    worldOffset.y = Math.round(worldOffset.y);
-                    viewOffsetX = 0;
-                    viewOffsetY = 0;
-                    updateTiles();
-                }
-            }
-            lastMousePosition.x = (float) xpos;
-            lastMousePosition.y = (float) ypos;
-        });
-
-        // 设置鼠标按钮回调
-        glfwSetMouseButtonCallback(window, (_, button, action, _) -> {
-            if (button == GLFW_MOUSE_BUTTON_LEFT) {
-                isDragging = action == GLFW_PRESS;
-                if (!isDragging) {
-                    worldOffset.x = Math.round(worldOffset.x);
-                    worldOffset.y = Math.round(worldOffset.y);
-                    viewOffsetX = 0;
-                    viewOffsetY = 0;
-                    updateTiles();
-                }
-            }
-        });
-
-        // 设置OpenGL上下文
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1);
-        glfwShowWindow(window);
-
-        // 初始化OpenGL
-        GL.createCapabilities();
-
-        // 初始化渲染器和纹理系统
-        renderer = new Renderer2D(WINDOW_WIDTH, WINDOW_HEIGHT);
-        TextureManager.init();
-        tiles = new ArrayList<>();
-        terrainGenerator = new TerrainGenerator(114514);
-
-        // 生成初始地图
-        updateTiles();
-    }
-
-    private void updateTiles() {
-        tiles.clear();
-        
-        int startX = (int)Math.floor(worldOffset.x);
-        int startY = (int)Math.floor(worldOffset.y);
-        
-        for (int x = 0; x < MAP_WIDTH; x++) {
-            for (int y = 0; y < MAP_HEIGHT; y++) {
-                float worldX = x + startX;
-                float worldY = y + startY;
-
-                // 根据地形类型选择对应的纹理
-                String textureType;
-                if (terrainGenerator.isWater(worldX, worldY)) {
-                    textureType = "water";
-                } else if (terrainGenerator.isMountain(worldX, worldY)) {
-                    textureType = "mountain";
-                } else if (terrainGenerator.isForest(worldX, worldY)) {
-                    textureType = "forest";
-                } else {
-                    textureType = "floor";
-                }
-
-                float screenX = (float)x / MAP_WIDTH * 2.0f - 1.0f + TILE_SIZE/2 + viewOffsetX;
-                float screenY = (float)y / MAP_HEIGHT * 2.0f - 1.0f + TILE_SIZE/2 + viewOffsetY;
-
-                tiles.add(new Tile(
-                    new Vector2f(screenX, screenY),
-                    TILE_SIZE,
-                    textureType
-                ));
-            }
-        }
+        // 初始化FPS计时器
+        lastFrameTime = System.nanoTime();
+        frameCount = 0;
+        fps = 0.0f;
     }
 
     private void loop() {
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        while (!glfwWindowShouldClose(window)) {
-            GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+        while (!window.shouldClose()) {
+            // 计算帧时间
+            long currentTime = System.nanoTime();
+            float deltaTime = (currentTime - lastFrameTime) / 1_000_000_000.0f;
+            lastFrameTime = currentTime;
 
-            renderer.begin();
-            for (Tile tile : tiles) {
-                renderer.submit(
-                    tile.position,
-                    new Vector2f(tile.size),
-                    new Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-                    TextureManager.getTexture(tile.textureType)
-                );
+            // 更新FPS计数
+            frameCount++;
+            timeSinceLastFPSUpdate += deltaTime;
+
+            if (timeSinceLastFPSUpdate >= FPS_UPDATE_INTERVAL) {
+                fps = frameCount / timeSinceLastFPSUpdate;
+                frameCount = 0;
+                timeSinceLastFPSUpdate = 0.0f;
+                System.out.printf("FPS: %.1f%n", fps);
             }
-            renderer.end();
 
-            glfwSwapBuffers(window);
-            glfwPollEvents();
+            glClear(GL_COLOR_BUFFER_BIT);
 
-            if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-                terrainGenerator.reseed();
-                updateTiles();
-                while (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-                    glfwPollEvents();
-                }
+            // 更新旋转
+            rotation += 0.001f;
+            for (int i = 0; i < scene.getMeshes().size(); i++) {
+                Mesh mesh = scene.getMeshes().get(i);
+                mesh.setRotation(0.0f, 0.0f, -rotation + i * 0.2f);
+                mesh.setPosition((float) Math.sin(rotation*10+i) * 0.5f, (float) Math.cos(rotation*10+i) * 0.5f, 0f);
             }
+
+            renderer.render();
+            window.update();
         }
     }
 
     private void cleanup() {
-        renderer.cleanup();
-        TextureManager.cleanup();
-        glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
-        glfwTerminate();
+        shader.cleanup();
+        window.cleanup();
     }
 
     public static void main(String[] args) {
         new Main().run();
     }
-} 
+}
