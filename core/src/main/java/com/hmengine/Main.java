@@ -38,7 +38,7 @@ public class Main {
         float aspectRatio = (float) WIDTH / (float) HEIGHT;
         // 创建相机
         camera = new Camera(aspectRatio);
-        camera.setZoom(2f);
+        camera.setZoom(0.5f);
 
         // 创建渲染器
         renderer = new Renderer(shader, camera);

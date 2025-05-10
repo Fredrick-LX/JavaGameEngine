@@ -27,7 +27,7 @@ public class Camera {
 
     private void updateProjectionMatrix() {
         // 创建正交投影矩阵，保持长宽比
-        float width = 2.0f * zoom;
+        float width = 2.0f / zoom;
         float height = width / aspectRatio;
         projectionMatrix.identity();
         projectionMatrix.ortho(-width/2, width/2, -height/2, height/2, -1.0f, 1.0f);
