@@ -12,6 +12,7 @@ public class Shader {
     private int projectionMatrixLocation;
     private int viewMatrixLocation;
     private int modelMatrixLocation;
+    private int colorLocation;
 
     public Shader(String vertexPath, String fragmentPath) {
         createShaders(vertexPath, fragmentPath);
@@ -66,6 +67,7 @@ public class Shader {
         projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
         viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
         modelMatrixLocation = glGetUniformLocation(shaderProgram, "modelMatrix");
+        colorLocation = glGetUniformLocation(shaderProgram, "color");
     }
 
     private void checkShaderCompileError(int shader, String type) {
@@ -106,6 +108,10 @@ public class Shader {
         float[] matrixArray = new float[16];
         matrix.get(matrixArray);
         glUniformMatrix4fv(modelMatrixLocation, false, matrixArray);
+    }
+
+    public void setColor(float r, float g, float b, float a) {
+        glUniform4f(colorLocation, r, g, b, a);
     }
 
     public void cleanup() {

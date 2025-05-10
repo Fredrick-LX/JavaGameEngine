@@ -60,4 +60,8 @@ public class Mesh {
     public Matrix4f getModelMatrix() {
         return modelMatrix;
     }
+
+    public Vector3f getPosition() {
+        return position;
+    }
 } 

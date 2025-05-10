@@ -17,6 +17,7 @@ public class Window {
     private int height;
     private String title;
     private boolean resizable;
+    private boolean[] keyStates = new boolean[GLFW_KEY_LAST + 1];
 
     public Window(int width, int height, String title, boolean resizable) {
         this.width = width;
@@ -65,7 +66,20 @@ public class Window {
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
                 glfwSetWindowShouldClose(window, true);
             }
+
+            // 更新按键状态
+            if (key >= 0 && key <= GLFW_KEY_LAST) {
+                if (action == GLFW_PRESS) {
+                    keyStates[key] = true;
+                } else if (action == GLFW_RELEASE) {
+                    keyStates[key] = false;
+                }
+            }
         });
+    }
+
+    public boolean isKeyPressed(int key) {
+        return key >= 0 && key <= GLFW_KEY_LAST && keyStates[key];
     }
 
     private void centerWindow() {
@@ -108,4 +122,4 @@ public class Window {
     public int getHeight() {
         return height;
     }
-} 
+}

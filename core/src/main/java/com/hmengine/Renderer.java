@@ -1,6 +1,7 @@
 package com.hmengine;
 
 import com.hmengine.geometry.Mesh;
+import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -56,6 +57,13 @@ public class Renderer {
         
         // 渲染场景中的所有物体
         for (Mesh mesh : scene.getMeshes()) {
+            // 检查物体是否在视锥体内
+            Vector3f position = mesh.getPosition();
+            float radius = 0.1f; // 假设物体的包围球半径为0.1
+            if (!camera.isInFrustum(position.x, position.y, position.z, radius)) {
+                continue; // 如果不在视锥体内，跳过渲染
+            }
+            
             // 更新顶点数据
             updateBuffer(mesh);
             
