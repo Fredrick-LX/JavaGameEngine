@@ -17,21 +17,10 @@ public class Main {
     private Camera camera;
 
     private float rotation = 0.0f;
+    private long lastToggleTime = 0;
 
     // 背景颜色设置
     private float[] backgroundColor = { 0.2f, 0.3f, 0.3f, 1.0f };
-
-    // FPS相关变量
-    private long lastFrameTime;
-    private int frameCount;
-    private float fps;
-    private static final float FPS_UPDATE_INTERVAL = 0.5f;
-    private float timeSinceLastFPSUpdate = 0.0f;
-
-    // 帧率限制相关变量
-    private static final int TARGET_FPS = 120;
-    private static final long TARGET_FRAME_TIME = 1_000_000_000 / TARGET_FPS; // 纳秒
-    private long lastFrameEndTime;
 
     // 相机控制参数
     private float cameraMoveSpeed = 0.01f;
@@ -44,7 +33,7 @@ public class Main {
 
     private void init() {
         // 创建并初始化窗口
-        window = new Window(WIDTH, HEIGHT, "渲染测试 WSAD控制相机移动", true);
+        window = new Window(WIDTH, HEIGHT, "渲染测试 WSAD控制相机移动 空格键控制网格线显示", true);
         window.init();
 
         // 创建着色器程序
@@ -73,47 +62,15 @@ public class Main {
             mesh.setPosition(x, y, 0.0f);
             mesh.setScale(0.1f, 0.1f, 1.0f);
 
-            // 为每个六边形设置固定的颜色
-            /*
-             * float hue = (float) i;
-             * mesh.setColor(
-             * (float) Math.sin(hue * Math.PI / 2f * (float) (n + 0.52f)) * 0.5f + 0.5f,
-             * (float) Math.sin(hue * Math.PI / 2f * (float) (n + 1.04f)) * 0.5f + 0.5f,
-             * (float) Math.sin(hue * Math.PI / 2f * (float) (n + 1.57f)) * 0.5f + 0.5f,
-             * 1.0f);
-             */
-
             scene.addMesh(mesh);
         }
 
         // 设置场景
         renderer.setScene(scene);
-
-        // 初始化FPS计时器
-        lastFrameTime = System.nanoTime();
-        lastFrameEndTime = lastFrameTime;
-        frameCount = 0;
-        fps = 0.0f;
     }
 
     private void loop() {
         while (!window.shouldClose()) {
-            // 计算帧时间
-            long currentTime = System.nanoTime();
-            float deltaTime = (currentTime - lastFrameTime) / 1_000_000_000.0f;
-            lastFrameTime = currentTime;
-
-            // 更新FPS计数
-            frameCount++;
-            timeSinceLastFPSUpdate += deltaTime;
-
-            if (timeSinceLastFPSUpdate >= FPS_UPDATE_INTERVAL) {
-                fps = frameCount / timeSinceLastFPSUpdate;
-                frameCount = 0;
-                timeSinceLastFPSUpdate = 0.0f;
-                System.out.printf("FPS: %.1f%n", fps);
-            }
-
             // 设置背景颜色
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -139,23 +96,11 @@ public class Main {
 
             renderer.render();
             window.update();
-
-            // 帧率限制
-            long frameEndTime = System.nanoTime();
-            long frameTime = frameEndTime - lastFrameEndTime;
-            if (frameTime < TARGET_FRAME_TIME) {
-                try {
-                    Thread.sleep((TARGET_FRAME_TIME - frameTime) / 1_000_000); // 转换为毫秒
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-            lastFrameEndTime = System.nanoTime();
         }
     }
 
     /**
-     * 使用方向键控制相机
+     * 使用方向键控制相机，空格键控制网格线显示
      */
     private void handleCameraControl() {
         if (window.isKeyPressed(GLFW_KEY_W)) {
@@ -170,14 +115,13 @@ public class Main {
         if (window.isKeyPressed(GLFW_KEY_D)) {
             camera.move(cameraMoveSpeed, 0, 0);
         }
-        /*
-         * if (window.isKeyPressed(GLFW_KEY_LEFT)) {
-         * camera.rotate(0, 0, cameraRotateSpeed);
-         * }
-         * if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
-         * camera.rotate(0, 0, -cameraRotateSpeed);
-         * }
-         */
+        if (window.isKeyPressed(GLFW_KEY_SPACE)) {
+            //防抖
+            if (System.currentTimeMillis() - lastToggleTime > 200) {
+                lastToggleTime = System.currentTimeMillis();
+                renderer.setShowGridLines(!renderer.isShowGridLines());
+            }
+        }
     }
 
     // 设置背景颜色

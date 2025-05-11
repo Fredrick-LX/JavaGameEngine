@@ -12,6 +12,9 @@ public class Renderer {
     private Shader shader;
     private Camera camera;
     private Scene scene;
+    
+    // 控制网格线和轮廓线显示的布尔变量
+    private boolean showGridLines = true;
 
     public Renderer(Shader shader, Camera camera) {
         this.shader = shader;
@@ -48,13 +51,6 @@ public class Renderer {
     }
 
     public void render() {
-        // 使用着色器程序
-        shader.use();
-        
-        // 设置投影和视图矩阵（这些对于所有物体都是相同的）
-        shader.setProjectionMatrix(camera.getProjectionMatrix());
-        shader.setViewMatrix(camera.getViewMatrix());
-        
         // 渲染场景中的所有物体
         for (Mesh mesh : scene.getMeshes()) {
             // 检查物体是否在视锥体内
@@ -67,10 +63,11 @@ public class Renderer {
             // 更新顶点数据
             updateBuffer(mesh);
             
-            // 设置模型矩阵
+            // 使用主着色器绘制填充部分
+            shader.use();
+            shader.setProjectionMatrix(camera.getProjectionMatrix());
+            shader.setViewMatrix(camera.getViewMatrix());
             shader.setModelMatrix(mesh.getModelMatrix());
-            
-            // 设置网格颜色
             shader.setColor(
                 mesh.getColor().x,
                 mesh.getColor().y,
@@ -78,14 +75,32 @@ public class Renderer {
                 mesh.getColor().w
             );
             
-            // 绘制物体
+            // 绘制填充部分
             glBindVertexArray(VAO);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDrawArrays(mesh.getPrimitiveType(), 0, mesh.getVertexCount());
+
+            // 绘制网格线
+            if (showGridLines) {
+                shader.setColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色网格线
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glDrawArrays(mesh.getPrimitiveType(), 0, mesh.getVertexCount());
+            }
         }
     }
 
     public void cleanup() {
         glDeleteVertexArrays(VAO);
         glDeleteBuffers(VBO);
+        shader.cleanup();
     }
-} 
+
+    // Getter和Setter方法
+    public boolean isShowGridLines() {
+        return showGridLines;
+    }
+
+    public void setShowGridLines(boolean showGridLines) {
+        this.showGridLines = showGridLines;
+    }
+}
