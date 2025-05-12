@@ -5,6 +5,7 @@ import com.hmengine.Shader;
 import com.hmengine.Window;
 import com.hmengine.geometry.Geometry;
 import com.hmengine.geometry.Mesh;
+import com.hmengine.text.TextRenderer;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -18,6 +19,7 @@ public class Main {
     private Renderer renderer;
     private Scene scene;
     private Camera camera;
+    private TextRenderer textRenderer;
 
     private float rotation = 0.0f;
     private long lastToggleTime = 0;
@@ -41,6 +43,9 @@ public class Main {
 
         // 创建着色器程序
         shader = new Shader("resources/shaders/basic.vert", "resources/shaders/basic.frag");
+
+        // 创建文本渲染器
+        textRenderer = new TextRenderer("resources/fonts/simhei.ttf", 48, WIDTH, HEIGHT, "resources/shaders/text.vert", "resources/shaders/text.frag");
 
         float aspectRatio = (float) WIDTH / (float) HEIGHT;
         // 创建相机
@@ -67,7 +72,7 @@ public class Main {
 
             scene.addMesh(mesh);
         }
-
+                
         // 设置场景
         renderer.setScene(scene);
     }
@@ -93,7 +98,7 @@ public class Main {
                         (float) Math.sin(hue * Math.PI / 2f * (float) (scene.getMeshes().size() + 1.57f)) * 0.5f + 0.5f,
                         1.0f);
             }
-
+            textRenderer.renderText("Hello,World!", 100, 100, 1.0f, new float[] { 1.0f, 0.0f, 0.0f });
             // 相机控制
             handleCameraControl();
 

@@ -20,12 +20,12 @@
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl</artifactId>
-            <version>${lwjgl.version}</version>
+            <version>3.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl</artifactId>
-            <version>${lwjgl.version}</version>
+            <version>3.3.2</version>
             <classifier>natives-windows</classifier>
             <scope>runtime</scope>
         </dependency>
@@ -48,12 +48,12 @@
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-opengl</artifactId>
-            <version>${lwjgl.version}</version>
+            <version>3.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-opengl</artifactId>
-            <version>${lwjgl.version}</version>
+            <version>3.3.2</version>
             <classifier>natives-windows</classifier>
             <scope>runtime</scope>
         </dependency>
@@ -62,12 +62,12 @@
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-stb</artifactId>
-            <version>${lwjgl.version}</version>
+            <version>3.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-stb</artifactId>
-            <version>${lwjgl.version}</version>
+            <version>3.3.2</version>
             <classifier>natives-windows</classifier>
             <scope>runtime</scope>
         </dependency>
