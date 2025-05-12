@@ -1,5 +1,8 @@
-package com.hmengine;
-
+import com.hmengine.Camera;
+import com.hmengine.Renderer;
+import com.hmengine.Scene;
+import com.hmengine.Shader;
+import com.hmengine.Window;
 import com.hmengine.geometry.Geometry;
 import com.hmengine.geometry.Mesh;
 import static org.lwjgl.opengl.GL11.*;
@@ -37,7 +40,7 @@ public class Main {
         window.init();
 
         // 创建着色器程序
-        shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
+        shader = new Shader("resources/shaders/basic.vert", "resources/shaders/basic.frag");
 
         float aspectRatio = (float) WIDTH / (float) HEIGHT;
         // 创建相机
@@ -103,16 +106,16 @@ public class Main {
      * 使用方向键控制相机，空格键控制网格线显示
      */
     private void handleCameraControl() {
-        if (window.isKeyPressed(GLFW_KEY_W)) {
+        if (window.isKeyPressed(GLFW_KEY_W) || window.isKeyPressed(GLFW_KEY_UP)) {
             camera.move(0, cameraMoveSpeed, 0);
         }
-        if (window.isKeyPressed(GLFW_KEY_S)) {
+        if (window.isKeyPressed(GLFW_KEY_S) || window.isKeyPressed(GLFW_KEY_DOWN)) {
             camera.move(0, -cameraMoveSpeed, 0);
         }
-        if (window.isKeyPressed(GLFW_KEY_A)) {
+        if (window.isKeyPressed(GLFW_KEY_A) || window.isKeyPressed(GLFW_KEY_LEFT)) {
             camera.move(-cameraMoveSpeed, 0, 0);
         }
-        if (window.isKeyPressed(GLFW_KEY_D)) {
+        if (window.isKeyPressed(GLFW_KEY_D) || window.isKeyPressed(GLFW_KEY_RIGHT)) {
             camera.move(cameraMoveSpeed, 0, 0);
         }
         if (window.isKeyPressed(GLFW_KEY_SPACE)) {
