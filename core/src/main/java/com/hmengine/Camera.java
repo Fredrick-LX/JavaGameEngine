@@ -4,6 +4,9 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.joml.Vector3f;
 
+/**
+ * 摄像机类
+ */
 public class Camera {
     private Matrix4f projectionMatrix;
     private Matrix4f viewMatrix;
@@ -17,6 +20,10 @@ public class Camera {
     // 视锥体平面
     private Vector4f[] frustumPlanes = new Vector4f[6];
     
+    /**
+     * 构造函数
+     * @param aspectRatio 视图比例
+     */
     public Camera(float aspectRatio) {
         this.aspectRatio = aspectRatio;
         this.projectionMatrix = new Matrix4f();
@@ -30,36 +37,71 @@ public class Camera {
         updateViewMatrix();
     }
 
+    /**
+     * 设置位置
+     * @param x x坐标
+     * @param y y坐标
+     * @param z z坐标
+     */
     public void setPosition(float x, float y, float z) {
         position.set(x, y, z);
         updateViewMatrix();
     }
 
+    /**
+     * 设置旋转
+     * @param x x坐标
+     * @param y y坐标
+     * @param z z坐标
+     */
     public void setRotation(float x, float y, float z) {
         rotation.set(x, y, z);
         updateViewMatrix();
     }
 
+    /**
+     * 移动
+     * @param dx x坐标
+     * @param dy y坐标
+     * @param dz z坐标
+     */
     public void move(float dx, float dy, float dz) {
         position.add(dx, dy, dz);
         updateViewMatrix();
     }
 
+    /**
+     * 旋转
+     * @param dx x坐标
+     * @param dy y坐标
+     * @param dz z坐标
+     */
     public void rotate(float dx, float dy, float dz) {
         rotation.add(dx, dy, dz);
         updateViewMatrix();
     }
 
+    /**
+     * 设置视图比例
+     * @param aspectRatio 视图比例
+     */
     public void setAspectRatio(float aspectRatio) {
         this.aspectRatio = aspectRatio;
         updateProjectionMatrix();
     }
 
+    /**
+     * 设置缩放
+     * @param zoom 缩放
+     */
     public void setZoom(float zoom) {
         this.zoom = zoom;
         updateProjectionMatrix();
     }
 
+    /**
+     * 更新投影矩阵
+     */
     private void updateProjectionMatrix() {
         // 创建正交投影矩阵，保持长宽比
         float width = 2.0f / zoom;
@@ -69,6 +111,9 @@ public class Camera {
         updateFrustumPlanes();
     }
 
+    /**
+     * 更新视图矩阵
+     */
     private void updateViewMatrix() {
         viewMatrix.identity()
             .rotateXYZ(rotation)
@@ -76,6 +121,9 @@ public class Camera {
         updateFrustumPlanes();
     }
 
+    /**
+     * 更新视锥体平面
+     */
     private void updateFrustumPlanes() {
         Matrix4f vp = new Matrix4f(projectionMatrix).mul(viewMatrix);
         
@@ -94,6 +142,14 @@ public class Camera {
         frustumPlanes[5].set(vp.m03() - vp.m02(), vp.m13() - vp.m12(), vp.m23() - vp.m22(), vp.m33() - vp.m32()).normalize3();
     }
 
+    /**
+     * 判断点是否在视锥体内
+     * @param x x坐标
+     * @param y y坐标
+     * @param z z坐标
+     * @param radius 半径
+     * @return 是否在视锥体内
+     */
     public boolean isInFrustum(float x, float y, float z, float radius) {
         Vector4f pos = new Vector4f(x, y, z, 1.0f);
         for (Vector4f plane : frustumPlanes) {
@@ -104,10 +160,18 @@ public class Camera {
         return true;
     }
 
+    /**
+     * 获取投影矩阵
+     * @return 投影矩阵
+     */
     public Matrix4f getProjectionMatrix() {
         return projectionMatrix;
     }
 
+    /**
+     * 获取视图矩阵
+     * @return 视图矩阵
+     */
     public Matrix4f getViewMatrix() {
         return viewMatrix;
     }

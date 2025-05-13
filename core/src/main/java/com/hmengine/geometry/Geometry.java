@@ -2,6 +2,9 @@ package com.hmengine.geometry;
 
 import static org.lwjgl.opengl.GL11.*;
 
+/**
+ * 几何类
+ */
 public class Geometry {
     /**
      * 创建三角形网格

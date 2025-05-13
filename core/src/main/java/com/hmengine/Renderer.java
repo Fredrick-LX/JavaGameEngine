@@ -6,6 +6,9 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
+/**
+ * 渲染器类
+ */
 public class Renderer {
     private int VAO;
     private int VBO;
@@ -16,6 +19,11 @@ public class Renderer {
     // 控制网格线和轮廓线显示的布尔变量
     private boolean showGridLines = true;
 
+    /**
+     * 构造函数
+     * @param shader 着色器
+     * @param camera 摄像机
+     */
     public Renderer(Shader shader, Camera camera) {
         this.shader = shader;
         this.camera = camera;
@@ -23,6 +31,9 @@ public class Renderer {
         init();
     }
 
+    /**
+     * 初始化
+     */
     private void init() {
         // 创建VAO和VBO
         VAO = glGenVertexArrays();
@@ -33,23 +44,42 @@ public class Renderer {
         glEnableVertexAttribArray(0);
     }
 
+    /**
+     * 设置场景
+     * @param scene 场景
+     */
     public void setScene(Scene scene) {
         this.scene = scene;
     }
 
+    /**
+     * 添加网格
+     * @param mesh 网格
+     */
     public void addMesh(Mesh mesh) {
         scene.addMesh(mesh);
     }
 
+    /**
+     * 移除网格
+     * @param mesh 网格
+     */
     public void removeMesh(Mesh mesh) {
         scene.removeMesh(mesh);
     }
 
+    /**
+     * 更新缓冲区
+     * @param mesh 网格
+     */
     private void updateBuffer(Mesh mesh) {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, mesh.getVertices(), GL_STATIC_DRAW);
     }
 
+    /**
+     * 渲染
+     */
     public void render() {
         // 渲染场景中的所有物体
         for (Mesh mesh : scene.getMeshes()) {
@@ -89,17 +119,27 @@ public class Renderer {
         }
     }
 
+    /**
+     * 清理
+     */
     public void cleanup() {
         glDeleteVertexArrays(VAO);
         glDeleteBuffers(VBO);
         shader.cleanup();
     }
-
-    // Getter和Setter方法
+    
+    /**
+     * 获取是否显示网格线
+     * @return 是否显示网格线
+     */
     public boolean isShowGridLines() {
         return showGridLines;
     }
 
+    /**
+     * 设置是否显示网格线
+     * @param showGridLines 是否显示网格线
+     */
     public void setShowGridLines(boolean showGridLines) {
         this.showGridLines = showGridLines;
     }

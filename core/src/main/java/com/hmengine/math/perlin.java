@@ -2,9 +2,16 @@ package com.hmengine.math;
 
 import java.util.Random;
 
+/**
+ * Perlin噪声类
+ */
 public class perlin {
     private final int[] p; // 置换表
 
+    /**
+     * 构造Perlin噪声
+     * @param seed 种子
+     */
     public perlin(long seed) {
         p = new int[512];
         int[] permutation = new int[256];
@@ -24,6 +31,12 @@ public class perlin {
         }
     }
 
+    /**
+     * 计算Perlin噪声
+     * @param x x坐标
+     * @param y y坐标
+     * @return 噪声值
+     */
     public float noise(float x, float y) {
         int X = (int)Math.floor(x) & 255;
         int Y = (int)Math.floor(y) & 255;
@@ -40,14 +53,33 @@ public class perlin {
         return (res + 1.0f) / 2.0f; // 归一化到[0,1]
     }
 
+    /**
+     * 平滑插值
+     * @param t 插值参数
+     * @return 插值结果
+     */
     private float fade(float t) {
         return t * t * t * (t * (t * 6 - 15) + 10);
     }
 
+    /**
+     * 线性插值
+     * @param t 插值参数
+     * @param a 起始值
+     * @param b 结束值
+     * @return 插值结果
+     */
     private float lerp(float t, float a, float b) {
         return a + t * (b - a);
     }
 
+    /**
+     * 梯度计算
+     * @param hash 哈希值
+     * @param x x坐标
+     * @param y y坐标
+     * @return 梯度值
+     */
     private float grad(int hash, float x, float y) {
         int h = hash & 7; // 只取低3位
         float u = h < 4 ? x : y;
